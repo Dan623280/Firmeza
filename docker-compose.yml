@@ -1,0 +1,63 @@
+name: firmeza
+
+services:
+
+  # =========================
+  # POSTGRESQL
+  # =========================
+  firmeza-db:
+    image: postgres:17
+    container_name: firmeza-db
+
+    environment:
+      POSTGRES_DB: firmeza
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: Firmeza123
+
+    ports:
+      - "5435:5432"
+
+    volumes:
+      - firmeza_data:/var/lib/postgresql/data
+      - ./database/init:/docker-entrypoint-initdb.d
+
+    restart: unless-stopped
+
+
+  # =========================
+  # API C#
+  # =========================
+  
+  firmeza-api:
+    build:
+      context: ./api
+
+    container_name: firmeza-api
+
+    ports:
+      - "8088:8080"
+
+    volumes:
+      - ./api:/app
+
+    restart: unless-stopped
+
+  # =========================
+  # Angular Fronted
+  # =========================
+  firmeza-frontend:
+    build:
+      context: ./frontend/Firmeza
+
+    container_name: firmeza-frontend
+
+    ports:
+      - "4200:4200"
+
+    volumes:
+      - ./frontend/Firmeza:/app
+      - /app/node_modules
+
+    restart: unless-stopped
+volumes:
+  firmeza_data:
