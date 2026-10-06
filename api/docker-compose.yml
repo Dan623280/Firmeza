@@ -1,0 +1,89 @@
+services:
+  test-db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: firmeza_test
+      POSTGRES_PASSWORD: isolated-test-password
+      POSTGRES_DB: postgres
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U firmeza_test -d postgres"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  tests:
+    build:
+      context: .
+      dockerfile: Dockerfile.tests
+    environment:
+      FIRMEZA_TEST_DATABASE: "Host=test-db;Database=postgres;Username=firmeza_test;Password=isolated-test-password"
+    depends_on:
+      test-db:
+        condition: service_healthy
+    volumes:
+      - test-results:/results
+
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-firmeza}
+      POSTGRES_DB: ${POSTGRES_DB:-firmeza}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+    depends_on:
+      tests:
+        condition: service_completed_successfully
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
+  migrations:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: ["--migrate"]
+    environment: &api-environment
+      ASPNETCORE_ENVIRONMENT: Production
+      ConnectionStrings__DefaultConnection: "Host=db;Database=${POSTGRES_DB:-firmeza};Username=${POSTGRES_USER:-firmeza};Password=${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}"
+      Jwt__SigningKey: ${JWT_SIGNING_KEY:?Set JWT_SIGNING_KEY to a random key of at least 32 bytes}
+      BootstrapAdmin__Email: ${BOOTSTRAP_ADMIN_EMAIL:-}
+      BootstrapAdmin__Password: ${BOOTSTRAP_ADMIN_PASSWORD:-}
+      Cors__AllowedOrigins__0: ${CORS_ORIGIN:-http://localhost:3000}
+      Delivery__Enabled: ${DELIVERY_ENABLED:-false}
+      Smtp__Host: ${SMTP_HOST:-smtp.gmail.com}
+      Smtp__Port: ${SMTP_PORT:-587}
+      Smtp__UserName: ${SMTP_USERNAME:-}
+      Smtp__Password: ${SMTP_PASSWORD:-}
+      Smtp__From: ${SMTP_FROM:-}
+      Licenses__QuestPdf: ${QUESTPDF_LICENSE:-}
+      Licenses__EPPlus: ${EPPLUS_LICENSE:-}
+      AutoMapper__LicenseKey: ${AUTOMAPPER_LICENSE_KEY:-}
+      Receipts__Directory: /app/storage/receipts
+    depends_on:
+      db:
+        condition: service_healthy
+      tests:
+        condition: service_completed_successfully
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment: *api-environment
+    ports:
+      - "${API_PORT:-8080}:8080"
+    volumes:
+      - receipts:/app/storage/receipts
+    depends_on:
+      migrations:
+        condition: service_completed_successfully
+      tests:
+        condition: service_completed_successfully
+
+volumes:
+  postgres-data:
+  receipts:
+  test-results:

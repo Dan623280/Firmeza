@@ -1,6 +1,80 @@
-@FirmezaApi_HostAddress = http://localhost:5059
+@baseUrl = http://localhost:8080
+@token = REPLACE_WITH_JWT
+@productId = REPLACE_WITH_PRODUCT_UUID
+@saleId = REPLACE_WITH_SALE_UUID
+@vehicleId = REPLACE_WITH_VEHICLE_UUID
 
-GET {{FirmezaApi_HostAddress}}/weatherforecast/
-Accept: application/json
+### Health
+GET {{baseUrl}}/health/ready
 
-###
+### Public catalogue
+GET {{baseUrl}}/api/v1/products?page=1&pageSize=20&search=Hammer
+
+### Register a customer (use your own values)
+POST {{baseUrl}}/api/v1/auth/register
+Content-Type: application/json
+
+{
+  "documentNumber": "123456789",
+  "firstName": "Jane",
+  "lastName": "Doe",
+  "email": "jane@example.com",
+  "phone": "3001234567",
+  "address": "Main Street 123",
+  "password": "REPLACE_WITH_YOUR_PASSWORD"
+}
+
+### Login
+POST {{baseUrl}}/api/v1/auth/login
+Content-Type: application/json
+
+{
+  "email": "jane@example.com",
+  "password": "REPLACE_WITH_YOUR_PASSWORD"
+}
+
+### Create a product (Administrator)
+POST {{baseUrl}}/api/v1/products
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Hammer",
+  "description": "Steel hammer",
+  "price": 25000,
+  "stock": 30,
+  "taxRate": 0.19
+}
+
+### Purchase (Customer): retry the same request using the same key
+POST {{baseUrl}}/api/v1/sales
+Authorization: Bearer {{token}}
+Idempotency-Key: purchase-example-001
+Content-Type: application/json
+
+{
+  "items": [{ "productId": "{{productId}}", "quantity": 2 }]
+}
+
+### Own history and receipt status
+GET {{baseUrl}}/api/v1/sales/{{saleId}}
+Authorization: Bearer {{token}}
+
+### Private receipt
+GET {{baseUrl}}/api/v1/sales/{{saleId}}/receipt
+Authorization: Bearer {{token}}
+
+### Vehicle rental (Customer)
+POST {{baseUrl}}/api/v1/rentals
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "vehicleId": "{{vehicleId}}",
+  "startDate": "2026-12-01",
+  "endDate": "2026-12-03"
+}
+
+### Export (Administrator)
+GET {{baseUrl}}/api/v1/data/export/products?format=xlsx
+Authorization: Bearer {{token}}

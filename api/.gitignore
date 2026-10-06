@@ -1,0 +1,10 @@
+**/bin/
+**/obj/
+**/TestResults/
+.superpowers/
+.env
+.env.*
+!.env.example
+storage/
+*.user
+*.suo
