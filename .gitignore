@@ -1,0 +1,21 @@
+**/bin/
+**/obj/
+**/node_modules/
+**/dist/
+**/.angular/
+**/out-tsc/
+.idea/
+.vs/
+.env
+.env.*
+!.env.example
+**/wwwroot/recibos/*.pdf
+TestResults/
+*.user
+**/__pycache__/
+*.pyc
+
+# Configuración local del agente y credenciales de herramientas
+.agents/
+.codex/
+.aws/
