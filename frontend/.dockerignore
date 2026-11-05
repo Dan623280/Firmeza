@@ -1,0 +1,13 @@
+**/bin
+**/obj
+**/node_modules
+**/dist
+**/.angular
+**/out-tsc
+.git
+.idea
+.env
+.env.*
+**/wwwroot/recibos/*.pdf
+TestResults
+**/__pycache__

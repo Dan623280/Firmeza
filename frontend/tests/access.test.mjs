@@ -1,0 +1,10 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { validSession, homeFor, roleDestination } from '../src/app/access.mjs';
+const now=Date.parse('2026-10-23T12:00:00Z');
+const session=role=>({token:'test-token',role,expiresAt:'2026-10-23T14:00:00Z'});
+test('admite sesiones válidas de cliente y administrador',()=>{assert.equal(validSession(session('Cliente'),now),true);assert.equal(validSession(session('Administrador'),now),true);});
+test('rechaza sesiones vencidas, roles desconocidos y tokens vacíos',()=>{assert.equal(validSession(session('Administrador'),now+3*3600000),false);assert.equal(validSession(session('Otro'),now),false);assert.equal(validSession({...session('Cliente'),token:''},now),false);assert.equal(validSession(null,now),false);});
+test('redirige el login según el rol',()=>{assert.equal(homeFor('Administrador'),'/admin');assert.equal(homeFor('Cliente'),'/');});
+test('un cliente no puede abrir administración y un administrador no compra como cliente',()=>{assert.equal(roleDestination(session('Cliente'),'Administrador',now),'/');assert.equal(roleDestination(session('Administrador'),'Cliente',now),'/admin');assert.equal(roleDestination(session('Administrador'),'Administrador',now),null);assert.equal(roleDestination(session('Cliente'),'Cliente',now),null);});
+test('las rutas privadas requieren autenticación vigente',()=>{assert.equal(roleDestination(null,'Administrador',now),'/ingresar');assert.equal(roleDestination(session('Administrador'),'Administrador',now+3*3600000),'/ingresar');});
