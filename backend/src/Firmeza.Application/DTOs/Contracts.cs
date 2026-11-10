@@ -1,0 +1,21 @@
+using System.ComponentModel.DataAnnotations;
+namespace Firmeza.Application.DTOs;
+
+public record ProductInput([Required, StringLength(150, MinimumLength = 2)] string Name, [StringLength(500)] string Description, [Range(typeof(decimal), "0.01", "9999999999")] decimal Price, [Range(0, int.MaxValue)] int Stock, bool Active = true);
+public record ProductDto(Guid Id, string Name, string Description, decimal Price, int Stock, bool Active);
+public record CustomerInput([Required, StringLength(30, MinimumLength = 3)] string Document, [Required, StringLength(100)] string Name, [Required, StringLength(100)] string LastName, [Required, EmailAddress, StringLength(254)] string Email, [Required, Phone, StringLength(30)] string Phone, [Required, StringLength(250)] string Address, [Range(18, 120)] int Age, bool Active = true);
+public record CustomerDto(Guid Id, string Document, string Name, string LastName, string Email, string Phone, string Address, int Age, bool Active);
+public record RegisterInput([Required, EmailAddress] string Email, [Required, MinLength(10)] string Password, [Required] CustomerInput Customer);
+public record LoginInput([Required, EmailAddress] string Email, [Required] string Password);
+public record AuthDto(string Token, DateTime ExpiresAt, string Name, string Role);
+public record SaleLineInput(Guid ProductId, [Range(1, 100000)] int Quantity);
+public record SaleInput(Guid? CustomerId, [Required, MinLength(1), MaxLength(100)] List<SaleLineInput> Items);
+public record SaleDetailDto(Guid ProductId, string ProductName, int Quantity, decimal UnitPrice, decimal Subtotal);
+public record SaleDto(Guid Id, Guid CustomerId, string CustomerName, string Number, DateTime Date, decimal Subtotal, decimal Tax, decimal Total, string Status, bool EmailSent, List<SaleDetailDto> Details);
+public record VehicleInput([Required, StringLength(150)] string Name, [Required, StringLength(80)] string Type, [Required, StringLength(80)] string Brand, [Required, StringLength(12)] string Plate, [Range(typeof(decimal), "0.01", "9999999999")] decimal PricePerDay, bool Available = true, bool Active = true);
+public record VehicleDto(Guid Id, string Name, string Type, string Brand, string Plate, decimal PricePerDay, bool Available, bool Active);
+public record RentalInput(Guid VehicleId, DateOnly StartDate, DateOnly EndDate, Guid? CustomerId = null);
+public record RentalDto(Guid Id, string VehicleName, DateOnly StartDate, DateOnly EndDate, decimal PricePerDay, decimal Total, string Status);
+public record DashboardDto(int Products, int Customers, int Sales, decimal Revenue, int Rentals);
+public record ImportResult(int Products, int Customers, int Sales, List<string> Errors);
+public record FileDto(byte[] Content, string ContentType, string Name);
